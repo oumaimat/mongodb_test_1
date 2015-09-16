@@ -55,6 +55,24 @@ class GenericDAO :
 
         return updateResult
 
+    # Extraire les livreurs les plus proches d'une localisation dans un rayon donné
+    def getObjects(self, collection, userCoordinates):
+
+        locationDict = {"location" :
+                            {"$near": {
+                              "$geometry" : {
+                                  "type" : "Point",
+                                  "coordinates" : userCoordinates
+                              }  ,
+                                "$maxDistance" : 500
+                            }
+                             }
+                        }
+
+        foundObjects = list(collection.find(locationDict, limit=10))
+
+        return foundObjects
+
 class manageGPSLocation(Thread) :
 
     test = os.environ
@@ -64,27 +82,35 @@ class manageGPSLocation(Thread) :
     mongodb_connection = None
     collection = None
 
-    # def __init__(self,server,port,queueRef,pnb):
     def __init__(self):
         Thread.__init__(self)
         mongodb_connection = ConnectionToDatabase()
-        collection = mongodb_connection.getCollection("steeds")
+        manageGPSLocation.collection = mongodb_connection.getCollection("steeds")
         self.pubnub_settings = Pubnub(publish_key=manageGPSLocation.pubnub_publish_key,subscribe_key=manageGPSLocation.pubnub_subscribe_key)
         self.pubnub_channel = "channel_test"
-        # self.clientQueue = queueRef
-		# self.pnb = pnb
-
-
+        self.genericDAO = GenericDAO()
 
     def subscriber_callback(self, message, channel):
         print(message)
+        criteriaDict = {}
+        criteriaDict["_id"]=message["_id"]
+        
+        updateDict = {}
+        subUpdateDict = {}
+
+        subUpdateDict["type"]="Point"
+        subUpdateDict["coordinates"] = [message["lng"],message["lat"]]
+
+        updateDict["location"]=subUpdateDict
+
+        self.genericDAO.updateObjects(manageGPSLocation.collection, criteriaDict, updateDict)
+
 
     def subscriber_error(self, message):
             print("ERROR : "+message)
 
     def connect(self, message):
         print("CONNECTED")
-        self.pubnub_settings.publish(channel=self.pubnub_channel, message="Connected to pubnub")
 
     def reconnect(self, message):
         print("RECONNECTED")
