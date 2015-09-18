@@ -53,20 +53,4 @@ class GenericDAO :
 
         return updateResult
 
-    # Extraire les livreurs les plus proches d'une localisation dans un rayon donné
-    def getObjects(self, collection, userCoordinates):
 
-        locationDict = {"location" :
-                            {"$near": {
-                              "$geometry" : {
-                                  "type" : "Point",
-                                  "coordinates" : userCoordinates
-                              }  ,
-                                "$maxDistance" : 500
-                            }
-                             }
-                        }
-
-        foundObjects = list(collection.find(locationDict, limit=10))
-
-        return foundObjects
