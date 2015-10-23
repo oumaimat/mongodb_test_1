@@ -1,11 +1,12 @@
 __author__ = 'OTurki'
 
+
 from DAO.GenericDAO import GenericDAO, ConnectionToDatabase
 from threading import Thread
 from pubnub import Pubnub
 import os
 
-class manageGPSLocation(Thread) :
+class manageSteeds(Thread) :
 
     test = os.environ
     pubnub_publish_key = os.environ['PUBNUB_PUBLISH_KEY']
@@ -17,39 +18,34 @@ class manageGPSLocation(Thread) :
     def __init__(self):
         Thread.__init__(self)
         mongodb_connection = ConnectionToDatabase()
-        manageGPSLocation.collection = mongodb_connection.getCollection("steeds")
-        self.pubnub_settings = Pubnub(publish_key=manageGPSLocation.pubnub_publish_key,subscribe_key=manageGPSLocation.pubnub_subscribe_key)
+        manageSteeds.collection = mongodb_connection.getCollection("steeds")
+        self.pubnub_settings = Pubnub(publish_key=manageSteeds.pubnub_publish_key,subscribe_key=manageSteeds.pubnub_subscribe_key)
         # Rename to location channel
-        self.pubnub_channel = "channel_test"
+        self.pubnub_channel = "steeds_channel"
         self.genericDAO = GenericDAO()
 
+    def sendRequestsToSteeds(self,nearestSteed):
+
+        steedRequest = {}
+        steedRequest["msg_code"] = "00"
+        
+
+
+
     def subscriber_callback(self, message, channel):
-        print(message)
-        criteriaDict = {}
-        criteriaDict["_id"]=message["_id"]
-
-        updateDict = {}
-        subUpdateDict = {}
-
-        subUpdateDict["type"]="Point"
-        subUpdateDict["coordinates"] = [message["lng"],message["lat"]]
-
-        updateDict["location"]=subUpdateDict
-
-        self.genericDAO.updateObjects(manageGPSLocation.collection, criteriaDict, updateDict)
-
+        x = 1
 
     def subscriber_error(self, message):
             print("ERROR : "+message)
 
     def connect(self, message):
-        print("CONNECTED TO LOCATION CHANNEL")
+        print("CONNECTED TO STEEDS CHANNEL")
 
     def reconnect(self, message):
-        print("RECONNECTED TO LOCATION CHANNEL")
+        print("RECONNECTED TO STEEDS CHANNEL")
 
     def disconnect(self, message):
-        print("DISCONNECTED FROM LOCATION CHANNEL")
+        print("DISCONNECTED FROM STEEDS CHANNEL")
 
     def subscribe(self):
         # souscrire au channel
@@ -63,6 +59,5 @@ class manageGPSLocation(Thread) :
 
         # se desinscire du channel
         self.pubnub_settings.unsubscribe(self.pubnub_channel)
-
 
 
