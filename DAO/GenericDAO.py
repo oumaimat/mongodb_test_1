@@ -54,3 +54,9 @@ class GenericDAO :
         return updateResult
 
 
+    # Inserer un enregistrement dans une collection
+    def insertObject(self, collection, object):
+
+        insertionResult = collection.insert(object)
+
+        return insertionResult
