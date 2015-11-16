@@ -4,6 +4,7 @@ from DAO.GenericDAO import GenericDAO, ConnectionToDatabase
 from threading import Thread
 from pubnub import Pubnub
 import os
+import manageSteeds
 
 class manageClients(Thread) :
 
@@ -17,18 +18,22 @@ class manageClients(Thread) :
     def __init__(self):
         Thread.__init__(self)
         mongodb_connection = ConnectionToDatabase()
-        manageClients.collection = mongodb_connection.getCollection("predeliveries")
+        manageClients.deliveries_collection = mongodb_connection.getCollection("temp_deliveries")
         self.pubnub_settings = Pubnub(publish_key=manageClients.pubnub_publish_key,subscribe_key=manageClients.pubnub_subscribe_key)
         # Rename to location channel
         self.pubnub_channel = "clients_channel"
         self.genericDAO = GenericDAO()
+        self.manageSteeds = manageSteeds()
 
     def subscriber_callback(self, message, channel):
         print(message)
 
         # Inserer la demande de livraison faite par le client
         if(message["msg_code"] == "XX") :
-            self.genericDAO.insertObject(manageClients.collection, message)
+            # inserer la demande de livraison dans une collection temporaire
+            id_delivery = self.genericDAO.insertObject(manageClients.deliveries_collection, message)
+
+
 
 
     def subscriber_error(self, message):
@@ -55,6 +60,7 @@ class manageClients(Thread) :
 
         # se desinscire du channel
         self.pubnub_settings.unsubscribe(self.pubnub_channel)
+
 
 
 

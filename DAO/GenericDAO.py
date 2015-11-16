@@ -60,3 +60,36 @@ class GenericDAO :
         insertionResult = collection.insert(object)
 
         return insertionResult
+
+     # Extraire un enregistrement
+    def getOneObject(self, collection, objectCriteria):
+
+        foundObject = collection.find_one(objectCriteria)
+
+        return foundObject
+
+    # Extraire un ou plusieurs enregistrements
+    def getObjects(self, collection, objectCriteria):
+
+        foundObjects = list(collection.find(objectCriteria))
+
+        return foundObjects
+
+
+    #Get 10 nearest available steeds
+    def getNearestSteeds(self, collection, client_coordinates):
+
+        locationDict = {"location":
+            {"$near": {
+                "$geometry": {
+                    "type": "Point",
+                    "coordinates": client_coordinates
+                },
+                "$maxDistance": 500
+            }
+            }
+        }
+
+        foundSteeds = list(collection.find(locationDict, limit=10))
+
+        return foundSteeds
